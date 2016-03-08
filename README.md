@@ -1,3 +1,3 @@
 # Curve25519
 
-Diffie-Hellman function
+Diffie-Hellman functions in Elixir

@@ -1,7 +1,14 @@
 defmodule Curve25519 do
   import Bitwise
 
+  @moduledoc """
+  Curve25519 Diffie-Hellman functions
 
+  """
+  @typedoc """
+  public or secret key
+  """
+  @type key :: <<_:: 32 * 8>>
   defp p, do: 57896044618658097711785492504343953926634992332820282019728792003956564819949
   defp a, do: 486662
 
@@ -11,7 +18,7 @@ defmodule Curve25519 do
       |> bor(64 <<< 8 * 31)
   end
 
-  defp square(x), do: x * x
+  defp square(x), do: x * x # :math.pow yields floats.. and we only need this one
 
   defp expmod(_b,0,_m), do: 1
   defp expmod(b,e,m) do
@@ -45,23 +52,42 @@ defmodule Curve25519 do
      if (n &&& 1) == 1, do: { add(pm, pm1, one), double(pm1) }, else: { double(pm), add(pm, pm1, one) }
   end
 
+  @doc """
+  Generate a secret/public key pair
+
+  Returned tuple contains `{random_secret_key, derived_public_key}`
+  """
+  @spec generate_key_pair :: {key,key}
   def generate_key_pair do
     secret = :crypto.strong_rand_bytes(32) # This algorithm is supposed to be resilient against poor RNG, but use the best we can
     {secret, derive_public_key(secret)}
   end
 
-  def derive_shared_secret(our_secret, their_public) do
+  @doc """
+  Derive a shared secret for a secret and public key
+
+  Given our secret key and our partner's public key, returns a
+  shared secret which can be derived by the partner in a complementary way.
+  """
+  @spec derive_shared_secret(key,key) :: key | :error
+  def derive_shared_secret(our_secret, their_public) when byte_size(our_secret) == 32 and byte_size(their_public) == 32 do
     our_secret |> :binary.decode_unsigned(:little)
                |> clamp
                |> curve25519(:binary.decode_unsigned(their_public, :little))
                |> :binary.encode_unsigned(:little)
   end
+  def derive_shared_secret(_ours,_theirs), do: :error
 
-  def derive_public_key(our_secret) do
+  @doc """
+  Derive the public key from a secret key
+  """
+  @spec derive_public_key(key) :: key | :error
+  def derive_public_key(our_secret) when byte_size(our_secret) == 32 do
     our_secret |> :binary.decode_unsigned(:little)
                |> clamp
                |> curve25519(9)
                |> :binary.encode_unsigned(:little)
   end
+  def derive_public_key(_ours), do: :error
 
 end

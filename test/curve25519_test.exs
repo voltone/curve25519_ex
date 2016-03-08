@@ -1,5 +1,5 @@
 defmodule Curve25519Test do
-  use ExUnit.Case
+  use PowerAssert
   doctest Curve25519
 
   test "PDF example" do
@@ -42,6 +42,26 @@ defmodule Curve25519Test do
 
     refute Curve25519.derive_shared_secret(bpk,ask) == Curve25519.derive_shared_secret(apk,bsk)
 
+  end
+
+  test "improper key sizes" do
+    short_key  = "too short and not very random"
+    long_key   = "too long and still not very random"
+    proper_key = "just right -- if not very random"
+
+    refute Curve25519.derive_public_key(proper_key) == :error
+    assert Curve25519.derive_public_key(short_key)  == :error
+    assert Curve25519.derive_public_key(long_key)   == :error
+
+    refute Curve25519.derive_shared_secret(proper_key,proper_key) == :error
+    assert Curve25519.derive_shared_secret(proper_key,long_key)   == :error
+    assert Curve25519.derive_shared_secret(proper_key,short_key)  == :error
+    assert Curve25519.derive_shared_secret(long_key,proper_key)   == :error
+    assert Curve25519.derive_shared_secret(short_key,proper_key)  == :error
+    assert Curve25519.derive_shared_secret(short_key,long_key)    == :error
+    assert Curve25519.derive_shared_secret(long_key,short_key)    == :error
+    assert Curve25519.derive_shared_secret(long_key,long_key)     == :error
+    assert Curve25519.derive_shared_secret(short_key,short_key)   == :error
   end
 
 end
