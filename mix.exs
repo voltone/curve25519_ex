@@ -3,7 +3,7 @@ defmodule Curve25519.Mixfile do
 
   def project do
     [app: :curve25519,
-     version: "0.0.1",
+     version: "0.1.0",
      elixir: "~> 1.2",
      name: "Curve25519",
      source_url: "https://github.com/mwmiller/curve25519_ex",

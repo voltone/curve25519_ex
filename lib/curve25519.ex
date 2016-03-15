@@ -9,8 +9,9 @@ defmodule Curve25519 do
   public or secret key
   """
   @type key :: <<_:: 32 * 8>>
-  defp p, do: 57896044618658097711785492504343953926634992332820282019728792003956564819949
-  defp a, do: 486662
+
+  @p 57896044618658097711785492504343953926634992332820282019728792003956564819949
+  @a 486662
 
   defp clamp(c) do
     c |> band(~~~7)
@@ -26,24 +27,24 @@ defmodule Curve25519 do
        if (e &&& 1) == 1, do: (t * b) |> rem(m), else: t
   end
 
-  defp inv(x), do: x|> expmod(p - 2, p)
+  defp inv(x), do: x|> expmod(@p - 2, @p)
 
   defp add({xn,zn}, {xm,zm}, {xd,zd}) do
        x = (xm * xn - zm * zn) |> square |> (&(&1 * 4 * zd)).()
        z = (xm * zn - zm * xn) |> square |> (&(&1 * 4 * xd)).()
-       {rem(x,p), rem(z,p)}
+       {rem(x,@p), rem(z,@p)}
   end
   defp double({xn,zn}) do
        x = (square(xn) - square(zn)) |> square
-       z = 4 * xn * zn * (square(xn) + a * xn * zn + square(zn))
-      {rem(x,p),  rem(z,p)}
+       z = 4 * xn * zn * (square(xn) + @a * xn * zn + square(zn))
+      {rem(x,@p),  rem(z,@p)}
   end
 
   defp curve25519(n, base) do
     one = {base,1}
     two = double(one)
     {{x,z}, _} = nth_mult(n, {one,two})
-    (x * inv(z)) |> rem(p)
+    (x * inv(z)) |> rem(@p)
   end
 
   defp nth_mult(1, basepair), do: basepair
